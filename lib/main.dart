@@ -44,6 +44,20 @@ class _HomeState extends State<Home> {
     });
   }
 
+  Future<Null> _refresh() async{
+    await Future.delayed(Duration(seconds: 1)); //Duration apenas por estetica
+    setState(() {
+      _toDoList.sort((a, b){
+        if(a["ok"] && !b["ok"]) return 1;
+        else if(!a["ok"] && b["ok"]) return -1;
+        else return 0;
+      });
+
+      _saveData();
+    });
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -76,10 +90,13 @@ class _HomeState extends State<Home> {
             ),
           ),
           Expanded(
-            child: ListView.builder(
-              padding: EdgeInsets.only(top: 10.0),
-              itemCount: _toDoList.length,
-              itemBuilder: buildItem,
+            child: RefreshIndicator(
+                child: ListView.builder(
+                  padding: EdgeInsets.only(top: 10.0),
+                  itemCount: _toDoList.length,
+                  itemBuilder: buildItem,
+                ),
+                onRefresh: _refresh,
             ),
           ),
         ],
@@ -94,7 +111,10 @@ class _HomeState extends State<Home> {
         color: Colors.red,
         child: Align(
           alignment: Alignment(-0.9, 0.0),
-          child: Icon(Icons.delete, color: Colors.white,),
+          child: Icon(
+            Icons.delete,
+            color: Colors.white,
+          ),
         ),
       ),
       direction: DismissDirection.startToEnd,
@@ -102,8 +122,7 @@ class _HomeState extends State<Home> {
         title: Text(_toDoList[index]["title"]),
         value: _toDoList[index]["ok"],
         secondary: CircleAvatar(
-          child: Icon(
-              _toDoList[index]["ok"] ? Icons.check : Icons.error),
+          child: Icon(_toDoList[index]["ok"] ? Icons.check : Icons.error),
         ),
         onChanged: (checked) {
           setState(() {
@@ -119,17 +138,17 @@ class _HomeState extends State<Home> {
           _toDoList.removeAt(index);
 
           _saveData();
-          
+
           final snack = SnackBar(
-              content: Text("Tarefa \"${_lastRemoved["title"]}\" removida!"),
+            content: Text("Tarefa \"${_lastRemoved["title"]}\" removida!"),
             action: SnackBarAction(
-                label: "Desfazer",
-                onPressed: () {
-                  setState(() {
-                    _toDoList.insert(_lastRemovedPos, _lastRemoved);
-                    _saveData();
-                  });
-                },
+              label: "Desfazer",
+              onPressed: () {
+                setState(() {
+                  _toDoList.insert(_lastRemovedPos, _lastRemoved);
+                  _saveData();
+                });
+              },
             ),
             duration: Duration(seconds: 2),
           );
